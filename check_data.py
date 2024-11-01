@@ -7,7 +7,7 @@ def check_types(sheet1):
     for row in sheet1['B8':'C10']:
         list_result = []
         for cell in row:
-            if cell.value != None:
+            if cell.value is not None:
                 list_result.append(cell.value)
         if len(list_result) > 0:
             all_result.append(list_result)
@@ -24,16 +24,46 @@ def check_types(sheet1):
 
     return start_count, all_result
 
+
 def check_problems(sheet_problems):
     list_all_problems = []
     for row in sheet_problems['B7':'D49']:
         list_problems = []
         for cell in row:
-            if cell.value != None:
+            if cell.value is not None:
                 list_problems.append(cell.value)
         if len(list_problems) == 3:
             list_all_problems.append(list_problems)
 
     return list_all_problems
 
+
+def check_kt(sheet_kts):
+    list_kts = []
+    for row in sheet_kts['D7': 'D10']:
+        for cell in row:
+            if cell.value is not None:
+                if cell.value is False:
+                    list_kts.append('Нет')
+                elif cell.value is True:
+                    list_kts.append('Да')
+                else:
+                    list_kts.append(cell.value)
+
+    return list_kts
+
+
+def check_st(sheet_sts):
+    list_sts = []
+    for row in sheet_sts['D7': 'D10']:
+        for cell in row:
+            if cell.value is not None:
+                if cell.value is False:
+                    list_sts.append('Нет')
+                elif cell.value is True:
+                    list_sts.append('Да')
+                else:
+                    list_sts.append(cell.value)
+
+    return list_sts
 

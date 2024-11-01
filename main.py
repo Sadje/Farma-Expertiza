@@ -16,30 +16,46 @@ def create_errorsFile(errors):
 def read_anketa(file) -> tuple:
     errors = {}
     flag = True
-    path = 'Bad_Raw' + r'\\' + file                             # Raw
+    path = 'Raw' + r'\\' + file                             # Raw
     wb = openpyxl.load_workbook(path, data_only=True)
     sheet1 = wb['Форма']
     sheets = wb.sheetnames[1:]
-
+    sheets_kt = wb.sheetnames[-9:-6]
+    sheets_st = wb.sheetnames[-6:-3]
     context = {'num_project': sheet1['C2'].value,
                'name_project': sheet1['C3'].value,
                'code_project': sheet1['C4'].value,
                'org_project': sheet1['C5'].value}
     temp_counter, list_results = check_data.check_types(sheet1)
 
+
     if temp_counter != len(list_results):
-        errors[sheet1['C2'].value] = 'Проблемы в Видах и/или Типах результатов'
+        errors[sheet1['C2'].value] = ['Проблемы в Видах и/или Типах результатов']
     else:
 
         for idx_res in range(len(list_results)):
             context[f'name_result_{idx_res + 1}'] = f'{list_results[idx_res][0]}'
             context[f'type_result_{idx_res + 1}'] = f'{list_results[idx_res][1]}'
             list_all_problems = check_data.check_problems(wb[sheets[idx_res]])
+            list_all_kts = check_data.check_kt(wb[sheets_kt[idx_res]])
+            list_all_sts = check_data.check_st(wb[sheets_st[idx_res]])
             if len(list_all_problems) > 0:
                 for count_problems, problems in enumerate(list_all_problems):
                     context[f'problem_{idx_res + 1}_{count_problems + 1}'] = problems[0]
                     context[f'effect_{idx_res + 1}_{count_problems + 1}'] = problems[1]
                     context[f'import_{idx_res + 1}_{count_problems + 1}'] = problems[2]
+            else:
+                errors[sheet1['C2'].value].append('Не выбрано ни одной проблемы')
+            if len(list_all_kts) > 0:
+                for count_kt, kt in enumerate(list_all_kts):
+                    context[f'kt_{idx_res + 1}_{count_kt + 1}'] = kt
+            else:
+                errors[sheet1['C2'].value].append('Не выбрано ни одной критической технологии')
+            if len(list_all_sts) > 0:
+                for count_st, st in enumerate(list_all_sts):
+                    context[f'st_{idx_res + 1}_{count_st + 1}'] = st
+            else:
+                errors[sheet1['C2'].value].append('Не выбрано ни одной сквозной технологии')
 
     if len(errors) > 0:
         create_errorsFile(errors)
@@ -47,7 +63,7 @@ def read_anketa(file) -> tuple:
 
 
 def find_anketa(num_project):
-    for address, dirs, files in os.walk('Bad_Raw'):             # Raw
+    for address, dirs, files in os.walk('Raw'):             # Raw
         for file in files:
             if 'KPM' in file:
                 new_file = file.replace('KPM', 'КПМ')
