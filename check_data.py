@@ -85,3 +85,27 @@ def check_conc(sheet_conc):
                 list_conc.append(cell.value)
 
     return ". ".join(list_conc)
+
+
+def check_ugt(sheet_ugt):
+    flag = False
+    list_tasks = []
+    for row in sheet_ugt['D7':'D61']:
+        for cell in row:
+            if cell.value is not None:
+                list_tasks.append(cell.value)
+    if list_tasks.count(True) > 0:
+        flag = True
+    return flag
+
+
+def check_doc(sheet_doc):
+    flag = False
+    list_docs = []
+    for row in sheet_doc['D7':'D61']:
+        for cell in row:
+            if cell.value is not None:
+                list_docs.append(cell.value)
+    if list_docs.count(True) > 0:
+        flag = True
+    return flag

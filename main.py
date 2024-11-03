@@ -22,6 +22,9 @@ def read_anketa(file) -> tuple:
     sheets = wb.sheetnames[1:]
     sheets_kt = wb.sheetnames[-9:-6]
     sheets_st = wb.sheetnames[-6:-3]
+    # sheets_ugt = wb.sheetnames[6:18]
+    # sheets_doc = wb.sheetnames[18:30]
+
     context = {'num_project': sheet1['C2'].value,
                'name_project': sheet1['C3'].value,
                'code_project': sheet1['C4'].value,
@@ -50,6 +53,36 @@ def read_anketa(file) -> tuple:
         for idx_res in range(len(list_results)):
             context[f'name_result_{idx_res + 1}'] = f'{list_results[idx_res][0]}'
             context[f'type_result_{idx_res + 1}'] = f'{list_results[idx_res][1]}'
+
+            if context[f'type_result_{idx_res + 1}'] == 'Лекарственный препарат':
+                temp_result = 'ЛП'
+            elif context[f'type_result_{idx_res + 1}'] == 'Медицинское изделие':
+                temp_result = 'МИ'
+            elif context[f'type_result_{idx_res + 1}'] == 'Клинические рекомендации':
+                temp_result = 'КР'
+            else:
+                temp_result = 'Иное'
+
+            sheet_ugt = wb[f'Р{idx_res + 1}_УГТ_{temp_result}']
+            sheet_doc = wb[f'Р{idx_res + 1}_ДОК_{temp_result}']
+            print(context['num_project'])
+
+            if check_data.check_ugt(sheet_ugt):
+                print(f'Р{idx_res + 1} УГТ - норм')
+            else:
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append(f'Ошибка в УГТ для результата {idx_res + 1}')
+                else:
+                    errors[sheet1['C2'].value] = [f'Ошибка в УГТ для результата {idx_res + 1}']
+
+            if check_data.check_doc(sheet_doc):
+                print(f'Р{idx_res + 1} ДОК - норм')
+            else:
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append(f'Ошибка в ДОК для результата {idx_res + 1}')
+                else:
+                    errors[sheet1['C2'].value] = [f'Ошибка в ДОК для результата {idx_res + 1}']
+
             if list_true[idx_res] not in etalon_true:
                 if sheet1['C2'].value in errors:
                     errors[sheet1['C2'].value].append(f'Некорректный термин соответствия для результата {idx_res + 1}')
@@ -78,18 +111,6 @@ def read_anketa(file) -> tuple:
                     errors[sheet1['C2'].value].append('Не выбрано ни одной проблемы')
                 else:
                     errors[sheet1['C2'].value] = ['Не выбрано ни одной проблемы']
-
-            if len(list_all_kts) == 0:
-                if sheet1['C2'].value in errors:
-                    errors[sheet1['C2'].value].append('Не выбрано ни одной критической технологии')
-                else:
-                    errors[sheet1['C2'].value] = ['Не выбрано ни одной критической технологии']
-
-            if len(list_all_sts) == 0:
-                if sheet1['C2'].value in errors:
-                    errors[sheet1['C2'].value].append('Не выбрано ни одной сквозной технологии')
-                else:
-                    errors[sheet1['C2'].value] = ['Не выбрано ни одной сквозной технологии']
 
     for key, value in errors.items():
         print(key, value, sep='\n')
