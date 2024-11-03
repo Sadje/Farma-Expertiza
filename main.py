@@ -4,8 +4,6 @@ import os
 import openpyxl
 from docx2pdf import convert
 import check_data
-import win32com.client
-import pythoncom
 
 
 def create_errorsFile(errors):
@@ -16,6 +14,7 @@ def create_errorsFile(errors):
 def read_anketa(file) -> tuple:
     errors = {}
     flag = True
+    etalon_true = ['Соответствует', 'Частично соответствует', 'Не соответствует']
     path = 'Raw' + r'\\' + file                             # Raw
     wb = openpyxl.load_workbook(path, data_only=True)
     sheet1 = wb['Форма']
@@ -26,16 +25,21 @@ def read_anketa(file) -> tuple:
                'name_project': sheet1['C3'].value,
                'code_project': sheet1['C4'].value,
                'org_project': sheet1['C5'].value}
+
     temp_counter, list_results = check_data.check_types(sheet1)
-
-
+    list_true = check_data.check_true_result(sheet1)
     if temp_counter != len(list_results):
         errors[sheet1['C2'].value] = ['Проблемы в Видах и/или Типах результатов']
+    elif temp_counter != len(list_true):
+        errors[sheet1['C2'].value].append('Проблема в соответствии результатов')
     else:
-
         for idx_res in range(len(list_results)):
             context[f'name_result_{idx_res + 1}'] = f'{list_results[idx_res][0]}'
             context[f'type_result_{idx_res + 1}'] = f'{list_results[idx_res][1]}'
+            if list_true[idx_res] not in etalon_true:
+                errors[sheet1['C2'].value].append(f'Некорректный термин соответствия для результата {idx_res + 1}')
+            else:
+                context[f'true_result_{idx_res + 1}'] = f'{list_true[idx_res]}'
             list_all_problems = check_data.check_problems(wb[sheets[idx_res]])
             list_all_kts = check_data.check_kt(wb[sheets_kt[idx_res]])
             list_all_sts = check_data.check_st(wb[sheets_st[idx_res]])
@@ -56,6 +60,7 @@ def read_anketa(file) -> tuple:
                     context[f'st_{idx_res + 1}_{count_st + 1}'] = st
             else:
                 errors[sheet1['C2'].value].append('Не выбрано ни одной сквозной технологии')
+
 
     if len(errors) > 0:
         create_errorsFile(errors)

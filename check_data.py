@@ -67,3 +67,11 @@ def check_st(sheet_sts):
 
     return list_sts
 
+
+def check_true_result(sheet_true) -> list:
+    list_true = []
+    for row in sheet_true['I8':'I10']:
+        for cell in row:
+            if cell.value is not None:
+                list_true.append(cell.value)
+    return list_true
