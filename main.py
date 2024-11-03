@@ -12,7 +12,8 @@ def create_errorsFile(errors):
 
 
 def read_anketa(file) -> tuple:
-    errors = {}
+
+    context = None
     flag = True
     etalon_true = ['Соответствует', 'Частично соответствует', 'Не соответствует']
     path = 'Raw' + r'\\' + file                             # Raw
@@ -28,42 +29,71 @@ def read_anketa(file) -> tuple:
 
     temp_counter, list_results = check_data.check_types(sheet1)
     list_true = check_data.check_true_result(sheet1)
+    conc = check_data.check_conc(sheet1)
     if temp_counter != len(list_results):
-        errors[sheet1['C2'].value] = ['Проблемы в Видах и/или Типах результатов']
+        if sheet1['C2'].value in errors:
+            errors[sheet1['C2'].value].append('Проблемы в Видах и/или Типах результатов')
+        else:
+            errors[sheet1['C2'].value] = ['Проблемы в Видах и/или Типах результатов']
     elif temp_counter != len(list_true):
-        errors[sheet1['C2'].value].append('Проблема в соответствии результатов')
+        if sheet1['C2'].value in errors:
+            errors[sheet1['C2'].value].append('Проблема в соответствии результатов')
+        else:
+            errors[sheet1['C2'].value] = ['Проблема в соответствии результатов']
+    elif len(conc) == 0:
+        if sheet1['C2'].value in errors:
+            errors[sheet1['C2'].value].append('')
+        else:
+            errors[sheet1['C2'].value] = ['Нет выводов']
     else:
+        context[f'conc_project'] = f'{conc}'
         for idx_res in range(len(list_results)):
             context[f'name_result_{idx_res + 1}'] = f'{list_results[idx_res][0]}'
             context[f'type_result_{idx_res + 1}'] = f'{list_results[idx_res][1]}'
             if list_true[idx_res] not in etalon_true:
-                errors[sheet1['C2'].value].append(f'Некорректный термин соответствия для результата {idx_res + 1}')
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append(f'Некорректный термин соответствия для результата {idx_res + 1}')
+                else:
+                    errors[sheet1['C2'].value] = [f'Некорректный термин соответствия для результата {idx_res + 1}']
             else:
                 context[f'true_result_{idx_res + 1}'] = f'{list_true[idx_res]}'
+
             list_all_problems = check_data.check_problems(wb[sheets[idx_res]])
             list_all_kts = check_data.check_kt(wb[sheets_kt[idx_res]])
             list_all_sts = check_data.check_st(wb[sheets_st[idx_res]])
-            if len(list_all_problems) > 0:
-                for count_problems, problems in enumerate(list_all_problems):
-                    context[f'problem_{idx_res + 1}_{count_problems + 1}'] = problems[0]
-                    context[f'effect_{idx_res + 1}_{count_problems + 1}'] = problems[1]
-                    context[f'import_{idx_res + 1}_{count_problems + 1}'] = problems[2]
-            else:
-                errors[sheet1['C2'].value].append('Не выбрано ни одной проблемы')
-            if len(list_all_kts) > 0:
-                for count_kt, kt in enumerate(list_all_kts):
-                    context[f'kt_{idx_res + 1}_{count_kt + 1}'] = kt
-            else:
-                errors[sheet1['C2'].value].append('Не выбрано ни одной критической технологии')
-            if len(list_all_sts) > 0:
-                for count_st, st in enumerate(list_all_sts):
-                    context[f'st_{idx_res + 1}_{count_st + 1}'] = st
-            else:
-                errors[sheet1['C2'].value].append('Не выбрано ни одной сквозной технологии')
 
+            for count_problems, problems in enumerate(list_all_problems):
+                context[f'problem_{idx_res + 1}_{count_problems + 1}'] = problems[0]
+                context[f'effect_{idx_res + 1}_{count_problems + 1}'] = problems[1]
+                context[f'import_{idx_res + 1}_{count_problems + 1}'] = problems[2]
 
-    if len(errors) > 0:
-        create_errorsFile(errors)
+            for count_kt, kt in enumerate(list_all_kts):
+                context[f'kt_{idx_res + 1}_{count_kt + 1}'] = kt
+
+            for count_st, st in enumerate(list_all_sts):
+                context[f'st_{idx_res + 1}_{count_st + 1}'] = st
+
+            if len(list_all_problems) == 0:
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append('Не выбрано ни одной проблемы')
+                else:
+                    errors[sheet1['C2'].value] = ['Не выбрано ни одной проблемы']
+
+            if len(list_all_kts) == 0:
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append('Не выбрано ни одной критической технологии')
+                else:
+                    errors[sheet1['C2'].value] = ['Не выбрано ни одной критической технологии']
+
+            if len(list_all_sts) == 0:
+                if sheet1['C2'].value in errors:
+                    errors[sheet1['C2'].value].append('Не выбрано ни одной сквозной технологии')
+                else:
+                    errors[sheet1['C2'].value] = ['Не выбрано ни одной сквозной технологии']
+
+    for key, value in errors.items():
+        print(key, value, sep='\n')
+
     return len(list_results), context
 
 
@@ -87,18 +117,25 @@ def create_pdf(file):
 
 
 def create_context(data):
-
+    global errors
+    errors = {}
     for key, values in data.items():
-        count_results, context = find_anketa(key)
-        context['zadanie'] = values[0]
-        context['expert_project'] = values[1]
-        if count_results > 0:
-            doc = DocxTemplate(f'Template_result_{count_results}.docx')
-            doc.render(context)
-            doc_file = f'Zakluychenie {key}.docx'
-            doc.save('Doc\\' + doc_file)
-            create_pdf(doc_file)
-        break
+        try:
+            count_results, context = find_anketa(key)
+            context['zadanie'] = values[0]
+            context['expert_project'] = values[1]
+            if count_results > 0:
+                doc = DocxTemplate(f'Template_result_{count_results}.docx')
+                doc.render(context)
+                doc_file = f'Zakluychenie {key}.docx'
+                doc.save('Doc\\' + doc_file)
+                create_pdf(doc_file)
+        except Exception:
+            break
+        finally:
+            if len(errors) > 0:
+                create_errorsFile(errors)
+        # break
 
 
 

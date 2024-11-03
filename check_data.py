@@ -75,3 +75,13 @@ def check_true_result(sheet_true) -> list:
             if cell.value is not None:
                 list_true.append(cell.value)
     return list_true
+
+
+def check_conc(sheet_conc):
+    list_conc = []
+    for row in sheet_conc['J8':'J10']:
+        for cell in row:
+            if cell.value is not None and cell.value not in list_conc:
+                list_conc.append(cell.value)
+
+    return ". ".join(list_conc)
