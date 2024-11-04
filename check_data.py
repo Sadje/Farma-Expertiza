@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def check_types(sheet1):
@@ -109,3 +110,26 @@ def check_doc(sheet_doc):
     if list_docs.count(True) > 0:
         flag = True
     return flag
+
+
+def create_ugt_table(file, sheet_name):
+    path = 'Raw' + r'\\'
+    df = pd.read_excel(path + file, sheet_name=sheet_name, header=5, skipfooter=1)
+    df = df.drop(df.columns[[1, 2, 4]], axis=1)
+    df = df.rename(columns={df.columns[0]: "Задачи"})
+    df = df.rename(columns={df.columns[1]: "Выполнена"})
+    df.loc[df['Выполнена'] == True, 'Выполнена'] = 'Да'
+    df.loc[df['Выполнена'] == False, 'Выполнена'] = 'Нет'
+    return df
+
+
+def create_doc_table(file, sheet_name):
+    path = 'Raw' + r'\\'
+    df = pd.read_excel(path + file, sheet_name=sheet_name, header=5, skipfooter=1)
+    df = df.drop(df.columns[[1, 2, 4]], axis=1)
+    df = df.rename(columns={df.columns[0]: "Материалы"})
+    df = df.rename(columns={df.columns[1]: "Наличие"})
+    df.loc[df['Наличие'] == True, 'Наличие'] = 'Да'
+    df.loc[df['Наличие'] == False, 'Наличие'] = 'Нет'
+    return df
+

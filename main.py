@@ -22,8 +22,6 @@ def read_anketa(file) -> tuple:
     sheets = wb.sheetnames[1:]
     sheets_kt = wb.sheetnames[-9:-6]
     sheets_st = wb.sheetnames[-6:-3]
-    # sheets_ugt = wb.sheetnames[6:18]
-    # sheets_doc = wb.sheetnames[18:30]
 
     context = {'num_project': sheet1['C2'].value,
                'name_project': sheet1['C3'].value,
@@ -65,10 +63,10 @@ def read_anketa(file) -> tuple:
 
             sheet_ugt = wb[f'Р{idx_res + 1}_УГТ_{temp_result}']
             sheet_doc = wb[f'Р{idx_res + 1}_ДОК_{temp_result}']
-            print(context['num_project'])
-
             if check_data.check_ugt(sheet_ugt):
-                print(f'Р{idx_res + 1} УГТ - норм')
+                df_ugt = check_data.create_ugt_table(file, f'Р{idx_res + 1}_УГТ_{temp_result}')
+                ugt_data = df_ugt.to_dict(orient='records')
+                context[f'tasks_project_{idx_res + 1}'] = ugt_data
             else:
                 if sheet1['C2'].value in errors:
                     errors[sheet1['C2'].value].append(f'Ошибка в УГТ для результата {idx_res + 1}')
@@ -76,7 +74,9 @@ def read_anketa(file) -> tuple:
                     errors[sheet1['C2'].value] = [f'Ошибка в УГТ для результата {idx_res + 1}']
 
             if check_data.check_doc(sheet_doc):
-                print(f'Р{idx_res + 1} ДОК - норм')
+                df_doc = check_data.create_doc_table(file, f'Р{idx_res + 1}_ДОК_{temp_result}')
+                docs_data = df_doc.to_dict(orient='records')
+                context[f'docs_project_{idx_res + 1}'] = docs_data
             else:
                 if sheet1['C2'].value in errors:
                     errors[sheet1['C2'].value].append(f'Ошибка в ДОК для результата {idx_res + 1}')
@@ -88,8 +88,8 @@ def read_anketa(file) -> tuple:
                     errors[sheet1['C2'].value].append(f'Некорректный термин соответствия для результата {idx_res + 1}')
                 else:
                     errors[sheet1['C2'].value] = [f'Некорректный термин соответствия для результата {idx_res + 1}']
-            else:
-                context[f'true_result_{idx_res + 1}'] = f'{list_true[idx_res]}'
+
+            context[f'true_result_{idx_res + 1}'] = f'{list_true[idx_res]}'
 
             list_all_problems = check_data.check_problems(wb[sheets[idx_res]])
             list_all_kts = check_data.check_kt(wb[sheets_kt[idx_res]])
@@ -156,8 +156,6 @@ def create_context(data):
         finally:
             if len(errors) > 0:
                 create_errorsFile(errors)
-        # break
-
 
 
 def create_dict_zadaniya() -> dict:
@@ -167,6 +165,7 @@ def create_dict_zadaniya() -> dict:
         dict_zadaniya[df_zadaniya['Number'][i]] = [df_zadaniya['Zadanie'][i], df_zadaniya['Expert short'][i]]
 
     return dict_zadaniya
+
 
 def main():
     create_context(create_dict_zadaniya())
