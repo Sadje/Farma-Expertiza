@@ -2,10 +2,46 @@ import pandas as pd
 import numpy as np
 
 
+def check_nioktr(sheet_nioktr1):
+    if sheet_nioktr1['A7'] is not None:
+        return sheet_nioktr1['A7'].value
+
+def create_nioktr1_table(file, sheet_nioktr1):
+    path = r'Raw_2025\\'
+    df = pd.read_excel(path + file, sheet_name=sheet_nioktr1, header=7)
+    df = df.drop(df.columns[[0, 2, 3, 4]], axis=1)
+    return df
+    # df = df.drop(df.columns[[1, 2, 4]], axis=1)
+
+    # df = df.rename(columns={df.columns[0]: "Задачи"})
+    # df = df.rename(columns={df.columns[1]: "Выполнена"})
+    # df.loc[df['Выполнена'] == True, 'Выполнена'] = 'Да'
+    # df.loc[df['Выполнена'] == False, 'Выполнена'] = 'Нет'
+    # return df
+
+def create_nioktr2_table(file, sheet_nioktr2):
+    path = r'Raw_2025\\'
+    df = pd.read_excel(path + file, sheet_name=sheet_nioktr2, header=5, skipfooter=1)
+    df = df.drop(df.columns[[1, 2, 4]], axis=1)
+    df = df.rename(columns={df.columns[0]: "Результаты"})
+    df = df.rename(columns={df.columns[1]: "Булевые"})
+    df.loc[df['Булевые'] == True, 'Булевые'] = 'Да'
+    df.loc[df['Булевые'] == False, 'Булевые'] = 'Нет'
+    return df
+    # df = df.drop(df.columns[[1, 2, 4]], axis=1)
+
+    # df = df.rename(columns={df.columns[0]: "Задачи"})
+    # df = df.rename(columns={df.columns[1]: "Выполнена"})
+    # df.loc[df['Выполнена'] == True, 'Выполнена'] = 'Да'
+    # df.loc[df['Выполнена'] == False, 'Выполнена'] = 'Нет'
+    # return df
+
+
+
 def check_types(sheet1):
     all_result = []
 
-    for row in sheet1['B8':'C10']:
+    for row in sheet1['B10':'C12']:
         list_result = []
         for cell in row:
             if cell.value is not None:
@@ -71,7 +107,7 @@ def check_st(sheet_sts):
 
 def check_true_result(sheet_true) -> list:
     list_true = []
-    for row in sheet_true['I8':'I10']:
+    for row in sheet_true['K10':'K12']:
         for cell in row:
             if cell.value is not None:
                 list_true.append(cell.value)
@@ -80,7 +116,7 @@ def check_true_result(sheet_true) -> list:
 
 def check_conc(sheet_conc):
     list_conc = []
-    for row in sheet_conc['J8':'J10']:
+    for row in sheet_conc['L10':'L12']:
         for cell in row:
             if cell.value is not None and cell.value not in list_conc:
                 list_conc.append(cell.value)
@@ -113,7 +149,7 @@ def check_doc(sheet_doc):
 
 
 def create_ugt_table(file, sheet_name):
-    path = 'Raw' + r'\\'
+    path = 'Raw_2025' + r'\\'
     df = pd.read_excel(path + file, sheet_name=sheet_name, header=5, skipfooter=1)
     df = df.drop(df.columns[[1, 2, 4]], axis=1)
     df = df.rename(columns={df.columns[0]: "Задачи"})
@@ -124,7 +160,7 @@ def create_ugt_table(file, sheet_name):
 
 
 def create_doc_table(file, sheet_name):
-    path = 'Raw' + r'\\'
+    path = 'Raw_2025' + r'\\'
     df = pd.read_excel(path + file, sheet_name=sheet_name, header=5, skipfooter=1)
     df = df.drop(df.columns[[1, 2, 4]], axis=1)
     df = df.rename(columns={df.columns[0]: "Материалы"})
