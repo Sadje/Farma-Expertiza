@@ -31,14 +31,7 @@ def read_anketa(file) -> tuple:
     temp_counter, list_results = check_data.check_types(sheet1)
     list_true = check_data.check_true_result(sheet1)
     conc = check_data.check_conc(sheet1)
-    print(type(sheet1['C7'].value))
-    #________________________________________
-    # if sheet1['C7'].value == 2024:
-    #     context['extra_status'] = 'Да'
-    # else:
-    #     context['extra_status'] = 'Нет'
-    #________________________________________
-
+    
     if temp_counter != len(list_results):
         if sheet1['C2'].value in errors:
             errors[sheet1['C2'].value].append('Проблемы в Видах и/или Типах результатов')
@@ -73,19 +66,20 @@ def read_anketa(file) -> tuple:
             sheet_doc = wb[f'Р{idx_res + 1}_ДОК_{temp_result}']
             if sheet1['C7'].value == 2024:
                 sheet_nioktr1 = wb[f'Р{idx_res + 1}_НИОКТР_1']
-                project_status = check_data.check_nioktr(sheet_nioktr1).split()
-                project_full_status = ' '.join(project_status[1:])
-                context[f'project_status_{idx_res + 1}'] = project_full_status[0].upper() + project_full_status[1:] + ':'
-                if project_status[0] == 'Нет,':
-                    df_new_results = check_data.create_nioktr1_table(file, f'Р{idx_res + 1}_НИОКТР_1')
-                    new_results = df_new_results.iloc[:, 0].to_list()
-                    context[f'results_project_{idx_res + 1}'] = new_results
+                if check_data.check_nioktr(sheet_nioktr1):
+                    project_status = check_data.check_nioktr(sheet_nioktr1).split()
+                    project_full_status = ' '.join(project_status[1:])
+                    context[f'project_status_{idx_res + 1}'] = project_full_status[0].upper() + project_full_status[1:] + ':'
+                    if project_status[0] == 'Нет,':
+                        df_new_results = check_data.create_nioktr1_table(file, f'Р{idx_res + 1}_НИОКТР_1')
+                        new_results = df_new_results.iloc[:, 0].to_list()
+                        context[f'results_project_{idx_res + 1}'] = new_results
+                    else:
+                        df_new_results = check_data.create_nioktr2_table(file, f'Р{idx_res + 1}_НИОКТР_2')
+                        new_results = df_new_results.to_dict(orient='records')
+                        context[f'results2_project_{idx_res + 1}'] = new_results
                 else:
-                    df_new_results = check_data.create_nioktr2_table(file, f'Р{idx_res + 1}_НИОКТР_2')
-                    new_results = df_new_results.to_dict(orient='records')
-                    context[f'results2_project_{idx_res + 1}'] = new_results
-            else:
-                errors[sheet1['C2'].value] = ['Не выбран ответ по результатам для проекта 2024 года']
+                    errors[sheet1['C2'].value] = ['Не выбран ответ по результатам для проекта 2024 года']
                 # if check_data.check_nioktr(sheet_nioktr1).startswith('Да'):
                 #     context['positive_nioktr'] = check_data.check_nioktr(sheet_nioktr1)
                 #     sheet_nioktr2 = wb[f'Р{idx_res + 1}_НИОКТР_2']
